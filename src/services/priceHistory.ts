@@ -5,9 +5,45 @@ import { AirportPair, FlightPrice, PriceHistory, PriceHistoryRecord } from '../t
 
 export class PriceHistoryService {
   private readonly filePath: string;
+  private initialized: boolean = false;
 
   constructor() {
     this.filePath = path.join(process.cwd(), 'data', 'priceHistory.json');
+  }
+
+  private async ensureInitialized(): Promise<void> {
+    if (!this.initialized) {
+      await this.initializeTestData();
+      this.initialized = true;
+    }
+  }
+
+  private async initializeTestData(): Promise<void> {
+    // Check if we already have data
+    const existingData = await this.loadHistory();
+    if (existingData.length > 0) {
+      return;
+    }
+
+    const today = new Date();
+    const testData: PriceHistoryRecord[] = [
+      {
+        airportPair: { origin: 'IAH', destination: 'LHR' },
+        history: Array.from({ length: 7 }, (_, i) => ({
+          date: format(subDays(today, i), 'yyyy-MM-dd'),
+          price: { amount: 1000, currency: 'USD' }
+        }))
+      },
+      {
+        airportPair: { origin: 'IAH', destination: 'CDG' },
+        history: Array.from({ length: 7 }, (_, i) => ({
+          date: format(subDays(today, i), 'yyyy-MM-dd'),
+          price: { amount: 1200, currency: 'USD' }
+        }))
+      }
+    ];
+
+    await this.saveHistory(testData);
   }
 
   async loadHistory(): Promise<PriceHistoryRecord[]> {
@@ -26,6 +62,7 @@ export class PriceHistoryService {
   }
 
   async addPricePoint(airportPair: AirportPair, price: FlightPrice): Promise<void> {
+    await this.ensureInitialized();
     const records = await this.loadHistory();
     const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -47,6 +84,7 @@ export class PriceHistoryService {
   }
 
   async getSevenDayAverage(airportPair: AirportPair): Promise<FlightPrice | null> {
+    await this.ensureInitialized();
     const records = await this.loadHistory();
     const record = records.find(
       (r) => r.airportPair.origin === airportPair.origin && 

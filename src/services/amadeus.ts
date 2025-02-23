@@ -14,7 +14,22 @@ export class AmadeusService {
   }
 
   async searchFlights(airportPair: AirportPair): Promise<FlightOffer[]> {
-    try {
+    // For testing: Return mock data that will trigger our alert
+    const basePrice = airportPair.destination === 'LHR' ? 980 : 1176; // 2% lower than historical prices
+    const today = new Date();
+    
+    return [{
+      price: {
+        amount: basePrice,
+        currency: 'USD'
+      },
+      availableSeats: 4,
+      departureDate: format(addDays(today, 1), 'yyyy-MM-dd\'T\'HH:mm:ss'),
+      returnDate: format(addDays(today, 8), 'yyyy-MM-dd\'T\'HH:mm:ss')
+    }];
+
+    // Comment out the actual API call for now
+    /*try {
       const today = new Date();
       const departureDate = format(today, 'yyyy-MM-dd');
       const returnDate = format(addDays(today, 7), 'yyyy-MM-dd');
@@ -40,6 +55,6 @@ export class AmadeusService {
     } catch (error) {
       console.error('Error searching flights:', error);
       return [];
-    }
+    }*/
   }
 } 
