@@ -4,6 +4,7 @@ import { AmadeusService } from './services/amadeus';
 import { PriceHistoryService } from './services/priceHistory';
 import { TwilioService } from './services/twilio';
 import { PriceAnalyzer } from './utils/priceAnalyzer';
+import logger from './utils/logger';
 
 export class ErrorFareScheduler {
   private amadeusService: AmadeusService;
@@ -20,25 +21,28 @@ export class ErrorFareScheduler {
 
   async checkErrorFares(): Promise<void> {
     if (this.isRunning) {
-      console.log('Previous check still running, skipping...');
+      logger.info('Previous check still running, skipping...');
       return;
     }
 
     this.isRunning = true;
-    console.log('Starting error fare check...');
+    logger.info('Starting error fare check...');
 
     try {
       for (const airportPair of airportPairs) {
-        console.log(`Checking ${airportPair.origin} to ${airportPair.destination}...`);
+        logger.info(`Checking ${airportPair.origin} to ${airportPair.destination}...`);
 
         // Get current flight offers
         const flightOffers = await this.amadeusService.searchFlights(airportPair);
-        if (flightOffers.length === 0) continue;
+        if (flightOffers.length === 0) {
+          logger.warn(`No flight offers found for ${airportPair.origin} to ${airportPair.destination}`);
+          continue;
+        }
 
         // Get historical average price
         const averagePrice = await this.priceHistoryService.getSevenDayAverage(airportPair);
         if (!averagePrice) {
-          // If no history exists, just store the current price
+          logger.info(`No price history for ${airportPair.origin} to ${airportPair.destination}, storing first data point`);
           await this.priceHistoryService.addPricePoint(airportPair, flightOffers[0].price);
           continue;
         }
@@ -55,22 +59,24 @@ export class ErrorFareScheduler {
 
         // Send notification if error fare found
         if (errorFare) {
-          console.log('Error fare found!', errorFare);
+          logger.info('Error fare found!', { errorFare });
           await this.twilioService.sendErrorFareAlert(errorFare);
         }
       }
     } catch (error) {
-      console.error('Error during fare check:', error);
+      logger.error('Error during fare check:', { error });
     } finally {
       this.isRunning = false;
-      console.log('Error fare check completed.');
+      logger.info('Error fare check completed.');
     }
   }
 
   start(): void {
-    console.log('Starting error fare scheduler...');
+    logger.info('Starting error fare scheduler...');
     cron.schedule(config.CHECK_INTERVAL, () => {
-      this.checkErrorFares();
+      this.checkErrorFares().catch(error => {
+        logger.error('Unhandled error in checkErrorFares:', { error });
+      });
     });
   }
 } 

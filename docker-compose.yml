@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  error-fare-finder:
+    build: .
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    env_file:
+      - .env
+    restart: unless-stopped 

@@ -10,15 +10,17 @@ A simple Node.js application that monitors flight prices and alerts you when it 
 - Sends SMS notifications via Twilio
 - Runs hourly checks
 - Stores price history locally
+- Production-ready logging
+- Docker support
 
 ## Prerequisites
 
-- Node.js (v14 or higher)
+- Node.js (v14 or higher) OR Docker
 - npm (v6 or higher)
 - Amadeus API credentials
 - Twilio account and credentials
 
-## Installation
+## Local Installation
 
 1. Clone the repository:
    ```bash
@@ -48,23 +50,46 @@ A simple Node.js application that monitors flight prices and alerts you when it 
 
 5. Configure your airport pairs in `src/config.ts`.
 
-## Usage
+## Docker Deployment
 
-1. Build the application:
+1. Make sure you have Docker and Docker Compose installed
+
+2. Build and start the container:
    ```bash
-   npm run build
+   docker-compose up -d
    ```
 
-2. Start the application:
+3. View logs:
    ```bash
-   npm start
+   docker-compose logs -f
    ```
 
-The application will:
-- Run an initial check immediately
-- Schedule hourly checks for error fares
-- Send SMS notifications when error fares are found
-- Store price history in `data/priceHistory.json`
+4. Stop the container:
+   ```bash
+   docker-compose down
+   ```
+
+## Remote Deployment Options
+
+1. **DigitalOcean Droplet**:
+   - Create a new droplet
+   - Install Docker and Docker Compose
+   - Clone the repository
+   - Copy your .env file
+   - Run with docker-compose
+
+2. **AWS EC2**:
+   - Launch an EC2 instance
+   - Install Docker and Docker Compose
+   - Clone the repository
+   - Copy your .env file
+   - Run with docker-compose
+
+3. **Heroku**:
+   - Install Heroku CLI
+   - Create a new Heroku app
+   - Set environment variables in Heroku dashboard
+   - Deploy using Heroku container registry
 
 ## Configuration
 
@@ -80,6 +105,14 @@ For development with auto-reload:
 ```bash
 npm run dev
 ```
+
+## Logs
+
+Logs are stored in the `logs` directory:
+- `logs/error.log`: Error-level logs
+- `logs/combined.log`: All logs
+
+In development, logs are also output to the console.
 
 ## License
 
