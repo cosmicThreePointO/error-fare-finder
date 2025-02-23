@@ -39,7 +39,7 @@ const envSchema = z.object({
     .number()
     .min(0, 'Price threshold must be positive')
     .max(1, 'Price threshold must be less than or equal to 1')
-    .default(0.8),
+    .default(0.02),
   MIN_SEATS_AVAILABLE: z.coerce
     .number()
     .int('Must be an integer')
@@ -66,6 +66,6 @@ export { config };
 
 // Airport pairs to monitor
 export const airportPairs = [
-  { origin: 'JFK', destination: 'LHR' }, // New York to London
-  { origin: 'LAX', destination: 'CDG' }, // Los Angeles to Paris
+  { origin: 'IAH', destination: 'LHR' }, // Houston to London
+  { origin: 'IAH', destination: 'CDG' }, // Houston to Paris
 ] as const; 
